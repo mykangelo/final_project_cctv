@@ -5,7 +5,7 @@ import cv2
 # open the webcam
 cap = cv2.VideoCapture(0)  # 0 corresponds to the default camera (you can change it based on your setup)
 
-# use a face and body dectection function
+# use a face and body detection function
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 body_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_fullbody.xml")
 
