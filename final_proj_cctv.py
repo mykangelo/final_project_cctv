@@ -3,6 +3,7 @@
 import cv2
 import time
 import datetime 
+import winsound 
 
 # open the webcam
 cap = cv2.VideoCapture(0)  # 0 corresponds to the default camera (you can change it based on your setup)
@@ -44,10 +45,21 @@ while True:
     for (x, y, width, height) in faces:
         cv2.rectangle(frame, (x, y), (x + width, y + height), (255, 0, 0,), 3)
 
+
+    # find the different images within the area of the camera using the threshholding
+    _,thresh = cv2.threshold(gray, 20, 255, cv2.THRESH_BINARY)
+    contours,_ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+
     # create the algorithm/logic for the recording and saving of the detection video with specific time
     if len(faces) + len(bodies) > 0:
         if detection:
             timer_started = False
+            # start the beeping sound when there is a detection within the area of the draw
+            for c in contours:
+                if cv2.contourArea(c) < 5000 :
+                    continue
+            winsound.Beep(500, 100)
         else:
             detection = True
             current_time = datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
@@ -66,7 +78,7 @@ while True:
         else:
             timer_started = True
             detection_stopped_time = time.time()
-
+            
     if detection:
         out.write(frame)
 
