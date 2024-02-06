@@ -1,9 +1,10 @@
-
 # import necessary libraries
 import cv2
 import time
 import datetime 
 import winsound 
+import smtplib
+from email.message import EmailMessage
 
 # open the webcam
 cap = cv2.VideoCapture(0)  # 0 corresponds to the default camera (you can change it based on your setup)
@@ -25,6 +26,26 @@ save_directory = "C:/Users/Mykha/PLD-PROGRAMS-FILES-PY/PLD-PROGRAMS-CPE1-5/Final
 frame_size = (int(cap.get(3)), int(cap.get(4)))
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 
+
+# setup the function to send email
+def send_email(subject, body, to):
+    msg = EmailMessage()
+    msg.set_content(body)
+    msg['subject'] = subject
+    msg['to'] = to
+
+    user = "emailalertscctv@gmail.com"
+    msg['from'] = user
+    password = "tpyavghktiiznpbx"
+
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(user, password)
+    server.send_message(msg)
+
+    server.quit()
+
+
 # check if the webcam is opened successfully
 if not cap.isOpened():
     print("Error: Could not open webcam.")
@@ -40,16 +61,13 @@ while True:
     faces = face_cascade.detectMultiScale(gray, 1.2, 5)
     bodies = face_cascade.detectMultiScale(gray, 1.2, 5)
 
-
     # draw the faces on the screen
     for (x, y, width, height) in faces:
         cv2.rectangle(frame, (x, y), (x + width, y + height), (255, 0, 0,), 3)
 
-
     # find the different images within the area of the camera using the threshholding
     _,thresh = cv2.threshold(gray, 20, 255, cv2.THRESH_BINARY)
     contours,_ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
 
     # create the algorithm/logic for the recording and saving of the detection video with specific time
     if len(faces) + len(bodies) > 0:
@@ -66,7 +84,8 @@ while True:
             video_filename = f"{current_time}.mp4"
             video_path = f"{save_directory}/{video_filename}"
             out = cv2.VideoWriter(video_path, fourcc, 9, frame_size)
-            print("Started Recording!")
+            send_email("Detection Started", "Someone has been detected on the camera!", "mmykangelo@gmail.com") 
+            print("Started Recording!") 
     elif detection:
         if timer_started:
             if time.time() - detection_stopped_time > RECORD_DURATION_DETECTION:
@@ -74,7 +93,6 @@ while True:
                 timer_started = False
                 out.release()
                 print("Stop Recording!")
-
         else:
             timer_started = True
             detection_stopped_time = time.time()
@@ -82,14 +100,10 @@ while True:
     if detection:
         out.write(frame)
 
-
     # check if the frame was captured successfully
     if not ret:
         print("Error: Failed to capture frame.")
         break
-
-    # perform any processing on the frame (optional)
-    # e.g., add image processing techniques here
 
     # display the frame
     cv2.imshow('CCTV Feed', frame)
@@ -102,9 +116,3 @@ while True:
 out.release()
 cap.release()
 cv2.destroyAllWindows()
-
-
-
-
-
-
